@@ -11,5 +11,5 @@ def read_until_delimiter(sock: socket) -> str:
             break
         data += byte
         last_byte = byte
-    print("data: ", data)
+
     return data.decode('ascii')

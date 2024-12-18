@@ -1,34 +1,37 @@
 from socket import socket
 
-from resp.types.redis_bulk_string import RedisBulkString
-from resp.types.redis_error import RedisError
-from resp.types.redis_integer import RedisInteger
-from resp.types.redis_string import RedisString
-from resp.utils import read_until_delimiter
+import resp.types.redis_bulk_string as redis_bulk_string
+import resp.types.redis_error as redis_error
+import resp.types.redis_integer as redis_integer
+import resp.types.redis_string as redis_string
+import resp.types.redis_array as redis_array
+import resp.types.redis_map as redis_map
+import resp.types.redis_bool as redis_bool
+import resp.types.redis_null as redis_null
 
 
-def _parse_list(sock: socket, type_constructor):
-    data = read_until_delimiter(sock)
-    length = int(data)
-    values = []
-    for _ in range(length):
-        response_type = sock.recv(1).decode('ascii')
-        if response_type == '*':
-            values.append(_parse_list(sock, type_constructor))
-        else:
-            values.append(parse_redis_simple_response(sock, response_type))
-    return type_constructor(values)
-
-
-def parse_redis_simple_response(sock: socket, response_type: str):
+def parse_redis_response(sock: socket):
+    response_type = sock.recv(1).decode('ascii')
     match response_type:
         case '+':
-            return RedisString.from_socket(sock)
+            return redis_string.RedisString.from_socket(sock)
         case '-':
-            return RedisError.from_socket(sock)
+            return redis_error.RedisError.from_socket(sock)
         case ':':
-            return RedisInteger.from_socket(sock)
+            return redis_integer.RedisInteger.from_socket(sock)
+        case '#':
+            return redis_bool.RedisBool.from_socket(sock)
+        case '_':
+            return redis_null.RedisNull.from_socket(sock)
         case '$':
-            return RedisBulkString.from_socket(sock)
+            return redis_bulk_string.RedisBulkString.from_socket(sock)
+        case '!':
+            return redis_error.RedisError.from_socket(sock)
+        case '*':
+            return redis_array.RedisArray.from_socket(sock)
+        case '%':
+            return redis_map.RedisMap.from_socket(sock)
         case _:
-            raise ValueError(f'Invalid response type: {response_type}')
+            print(f'Unknown response type: {response_type}')
+            sock.recv(4096)
+            return None

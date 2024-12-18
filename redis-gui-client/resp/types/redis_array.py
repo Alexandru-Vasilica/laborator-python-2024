@@ -1,7 +1,7 @@
 
-from resp.parser import _parse_list
+import resp.parser as parser
 from resp.types.redis_type import RedisType
-
+from resp.utils import read_until_delimiter
 
 class RedisArray(RedisType):
     value: list
@@ -11,7 +11,11 @@ class RedisArray(RedisType):
 
     @staticmethod
     def from_socket(sock):
-        return _parse_list(sock, RedisArray)
+        length = int(read_until_delimiter(sock))
+        value = []
+        for _ in range(length):
+            value.append(parser.parse_redis_response(sock))
+        return RedisArray(value)
 
     def to_resp(self):
         response = f'*{len(self.value)}\r\n'.encode('ascii')
@@ -20,4 +24,8 @@ class RedisArray(RedisType):
         return response
 
     def __str__(self):
-        return f'RedisArray: {self.value}'
+        output = 'RedisArray: [ '
+        for val in self.value:
+            output += str(val) + ', '
+        output += ']'
+        return output

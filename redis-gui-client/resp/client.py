@@ -1,8 +1,11 @@
 from socket import socket, AF_INET, SOCK_STREAM
 
-from resp import parse_redis_response
+from resp.parser import parse_redis_response
 
-PROTOCOL_VERSION = 4
+from resp.types.redis_array import RedisArray
+from resp.types.redis_bulk_string import RedisBulkString
+
+PROTOCOL_VERSION = 3
 
 
 class Client:
@@ -28,3 +31,10 @@ class Client:
         server_address = (self.host, self.port)
         self.socket.connect(server_address)
         self._handshake()
+
+    def send_command(self, command: str, *args):
+        message = RedisArray([RedisBulkString(command), *map(RedisBulkString, args)])
+        print("Sending command:", message)
+        self.socket.sendall(message.to_resp())
+        response = parse_redis_response(self.socket)
+        print("Received response:", response)
