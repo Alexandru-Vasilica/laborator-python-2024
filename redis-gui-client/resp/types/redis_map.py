@@ -31,3 +31,6 @@ class RedisMap(RedisType):
             output += f'{key}: {val}, '
         output += '}'
         return output
+
+    def to_native(self):
+        return {key.to_native(): val.to_native() for key, val in self.value.items()}

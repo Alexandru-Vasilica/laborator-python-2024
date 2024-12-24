@@ -11,7 +11,7 @@ class RedisBulkString(RedisType):
     @staticmethod
     def from_socket(sock):
         length = int(read_until_delimiter(sock))
-        data = sock.recv(length + 2).decode('ascii').lstrip('\r\n')
+        data = sock.recv(length + 2).decode('ascii').rstrip('\r\n')
         return RedisBulkString(data)
 
     def to_resp(self):

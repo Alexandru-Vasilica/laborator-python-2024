@@ -3,32 +3,32 @@ from resp.types.redis_type import RedisType
 from resp.utils import read_until_delimiter
 
 
-class RedisArray(RedisType):
-    value: list
+class RedisSet(RedisType):
+    value: set
 
-    def __init__(self, value: list):
+    def __init__(self, value: set):
         self.value = value
 
     @staticmethod
     def from_socket(sock):
         length = int(read_until_delimiter(sock))
-        value = []
+        value = set()
         for _ in range(length):
-            value.append(parser.parse_redis_response(sock))
-        return RedisArray(value)
+            value.add(parser.parse_redis_response(sock))
+        return RedisSet(value)
 
     def to_resp(self):
-        response = f'*{len(self.value)}\r\n'.encode('ascii')
+        response = f'~{len(self.value)}\r\n'.encode('ascii')
         for val in self.value:
             response += val.to_resp()
         return response
 
     def __str__(self):
-        output = 'RedisArray: [ '
+        output = 'RedisSet: { '
         for val in self.value:
             output += str(val) + ', '
-        output += ']'
+        output += '}'
         return output
 
     def to_native(self):
-        return [val.to_native() for val in self.value]
+        return {val.to_native() for val in self.value}
