@@ -1,6 +1,13 @@
 from enum import Enum
 
 FONT = "Arial"
+
+class KeyTypes(Enum):
+    STRING = "String"
+    LIST = "List"
+    SET = "Set"
+    SORTED_SET = "Sorted Set"
+    HASH = "Hash"
 class Colors(Enum):
     BACKGROUND = "#18122B"
     FOREGROUND = "#393053"

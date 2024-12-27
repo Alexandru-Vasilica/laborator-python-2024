@@ -7,7 +7,7 @@ class App:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Redis GUI")
-        self.root.geometry("800x600")
+        self.root.geometry("1200x800")
         self.root.resizable(False, False)
 
         client = Client()

@@ -1,58 +1,56 @@
+from __future__ import annotations
+
 import tkinter as tk
 from tkinter import *
 from resp.client import Client
 from gui.constants import *
-from enum import Enum
+from gui.components.button import Button
 
+from typing import TYPE_CHECKING
 
-class KeyTypes(Enum):
-    STRING = "String"
-    LIST = "List"
-    SET = "Set"
-    SORTED_SET = "Sorted Set"
-    HASH = "Hash"
-
-
-def _key_type_to_redis_type(key_type: str) -> str:
-    return {
-        KeyTypes.STRING.value: "string",
-        KeyTypes.LIST.value: "list",
-        KeyTypes.SET.value: "set",
-        KeyTypes.SORTED_SET.value: "zset",
-        KeyTypes.HASH.value: "hash",
-    }[key_type]
+if TYPE_CHECKING:
+    from gui.main_frame import MainFrame
 
 
 class EntryList(tk.Frame):
     client: Client
+    master: MainFrame
 
-    def __init__(self, main_frame):
+    def __init__(self, main_frame: MainFrame):
         super().__init__(main_frame)
         self.client = main_frame.client
         self.state = main_frame.state
         self.configure(bg=Colors.BACKGROUND.value)
         self._create_widgets()
 
-    def _create_widgets(self):
-        self._create_filters()
-        self._create_key_list()
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(0, weight=0)
-
-    def _refresh_keys(self):
-        redis_type = _key_type_to_redis_type(self.state["selected_type"].get())
-        filter = self.filters.key_filter.get() + "*" if self.filters.key_filter.get() else None
-        keys = self.client.scan_all(redis_type, filter)
+    def set_keys(self, keys):
         self.key_list.delete(0, tk.END)
         for key in keys:
             self.key_list.insert(tk.END, key)
+
+    def handle_key_selected(self):
+        if self.state["selected_key"]:
+            selected_index = self.key_list.get(0, tk.END).index(self.state["selected_key"])
+            self.key_list.selection_set(selected_index)
+            self.toolbar.delete_button.configure(state=tk.NORMAL)
+        else:
+            self.toolbar.delete_button.configure(state=tk.DISABLED)
+
+    def _create_widgets(self):
+        self._create_filters()
+        self._create_toolbar()
+        self._create_key_list()
+        self.handle_key_selected()
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(2, weight=1)
+        self.rowconfigure(1, weight=0)
+        self.rowconfigure(0, weight=0)
 
     def _on_select_key(self, event):
         selected_index = self.key_list.curselection()
         if selected_index:
             selected_key = self.key_list.get(selected_index)
-            self.state["selected_key"].set(selected_key)
+            self.master.set_selected_key(selected_key)
 
     def _create_key_list(self):
         self.key_list = tk.Listbox(self, selectmode=tk.SINGLE)
@@ -64,19 +62,40 @@ class EntryList(tk.Frame):
                                 selectbackground=Colors.PRIMARY.value,
                                 selectforeground=Colors.TEXT.value,
                                 )
+        self.key_list.bind("<<ListboxSelect>>", self._on_select_key)
         self.key_list.columnconfigure(0, weight=0)
         self.key_list.rowconfigure(0, weight=1)
-        self._refresh_keys()
-        self.key_list.grid(row=1, column=0, sticky="nsew")
+        self.key_list.grid(row=2, column=0, sticky="nsew")
+
+    def _create_toolbar(self):
+        self.toolbar = tk.Frame(self)
+        self.toolbar.configure(bg=Colors.BACKGROUND.value, padx=10, pady=5)
+
+        self.toolbar.refresh_button = Button(self.toolbar, "Refresh", lambda: self.master.refresh_keys())
+        self.toolbar.refresh_button.grid(row=0, column=0)
+
+        self.toolbar.add_button = Button(self.toolbar, "Add", lambda: self.master.add_key())
+        self.toolbar.add_button.grid(row=0, column=1)
+
+        self.toolbar.delete_button = Button(self.toolbar, "Delete", lambda: self.master.delete_selected_key())
+        self.toolbar.delete_button.grid(row=0, column=2)
+
+        self.toolbar.columnconfigure(0, weight=1)
+        self.toolbar.columnconfigure(1, weight=1)
+        self.toolbar.columnconfigure(2, weight=1)
+        self.toolbar.rowconfigure(0, weight=0)
+
+        self.toolbar.grid(row=1, column=0, sticky="ew")
 
     def _create_filters(self):
         self.filters = tk.Frame(self)
         self.filters.grid(row=0, column=0, sticky="ew")
-        self.filters.configure(bg=Colors.PRIMARY.value)
+        self.filters.configure(bg=Colors.PRIMARY.value, padx=10, pady=5)
         self.current_type = self.state["selected_type"]
+
         self.current_type.set(KeyTypes.STRING.value)
         self.filters.type_menu = tk.OptionMenu(self.filters, self.current_type, *[member.value for member in KeyTypes],
-                                               command=lambda _: self._refresh_keys())
+                                               command=lambda _: self.master.refresh_keys())
         self.filters.type_menu.configure(width=10,
                                          font=(FONT, FontSizes.MEDIUM.value),
                                          bg=Colors.PRIMARY.value,
@@ -90,20 +109,34 @@ class EntryList(tk.Frame):
                            activebackground=Colors.LIGHT.value,
                            font=(FONT, FontSizes.MEDIUM.value),
                            )
+        self.filters.type_menu_label = tk.Label(self.filters, text="Key Type:", bg=Colors.PRIMARY.value,
+                                                fg=Colors.TEXT.value,
+                                                font=(FONT, FontSizes.MEDIUM.value))
+
+
         self.filters.key_filter = StringVar()
         self.filters.key_filter_input = tk.Entry(self.filters, textvariable=self.filters.key_filter)
-        self.filters.key_filter_input.bind("<Return>", lambda _: self._refresh_keys())
+        self.filters.key_filter_input.bind("<Return>", lambda _: self.master.refresh_keys())
         self.filters.key_filter_input.configure(bg=Colors.PRIMARY.value,
                                                 fg=Colors.TEXT.value,
                                                 font=(FONT, FontSizes.MEDIUM.value),
                                                 highlightthickness=0,
                                                 )
 
-        self.filters.type_menu.grid(row=0, column=0)
-        self.filters.key_filter_input.grid(row=0, column=1)
+        self.filters.key_filter_label = tk.Label(self.filters, text="Key Name:", bg=Colors.PRIMARY.value,
+                                                 fg=Colors.TEXT.value,
+                                                 font=(FONT, FontSizes.MEDIUM.value))
 
-        self.filters.columnconfigure(0, weight=1)
-        self.filters.columnconfigure(1, weight=4)
+        self.filters_separator = tk.Frame(self.filters, bg=Colors.PRIMARY.value, height=2)
+        self.filters_separator.grid(row=0, column=3)
+
+        self.filters.type_menu_label.grid(row=0, column=1)
+        self.filters.key_filter_label.grid(row=0, column=4)
+        self.filters.type_menu.grid(row=0, column=2)
+        self.filters.key_filter_input.grid(row=0, column=5)
+
+        self.filters.columnconfigure(1, weight=1)
+        self.filters.columnconfigure(4, weight=4)
         self.filters.rowconfigure(0, weight=1)
 
         self.filters.grid(row=0, column=0, sticky="ew")
