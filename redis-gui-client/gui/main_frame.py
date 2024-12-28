@@ -1,13 +1,15 @@
 import tkinter as tk
-from enum import Enum
 from tkinter import *
-
+from tkinter import messagebox
 from gui.components.modals.add_hash_modal import AddHashModal
 from gui.components.modals.add_list_modal import AddListModal
 from gui.components.modals.add_string_modal import AddStringModal
 from gui.components.modals.add_zset_modal import AddZsetModal
+from gui.components.utils import show_error
+from gui.components.views.empty_view import EmptyView
 from gui.constants import KeyTypes
 from resp.client import Client
+from resp.resp_exception import RESPException
 from gui.entry_list import EntryList
 
 
@@ -18,6 +20,7 @@ def _key_type_to_redis_type(key_type: str) -> str:
         KeyTypes.SET.value: "set",
         KeyTypes.SORTED_SET.value: "zset",
         KeyTypes.HASH.value: "hash",
+        KeyTypes.ALL.value: None
     }[key_type]
 
 
@@ -36,8 +39,8 @@ class MainFrame(tk.Frame):
         self.entry_list.grid(row=0, column=0, sticky="nsew")
         self.refresh_keys()
 
-        frame2 = tk.Frame(self)
-        frame2.grid(row=0, column=2, sticky="nsew")
+        self.view = EmptyView(self)
+        self.view.grid(row=0, column=2, sticky="nsew")
 
         self.columnconfigure(0, weight=0)
         self.columnconfigure(2, weight=1)
@@ -51,65 +54,78 @@ class MainFrame(tk.Frame):
     def _init_state(self):
         self.state = {
             "selected_type": StringVar(),
-            "selected_key": None,
-            "selected_key_type": None
+            "selected_key": None
         }
-        self.state["selected_type"].set("String")
+        self.state["selected_type"].set(KeyTypes.ALL.value)
 
     def refresh_keys(self):
-        redis_type = _key_type_to_redis_type(self.state["selected_type"].get())
-        filter = self.entry_list.filters.key_filter.get() + "*" if self.entry_list.filters.key_filter.get() else None
-        keys = self.client.scan_all(redis_type, filter)
-        self.entry_list.set_keys(keys)
+        try:
+            redis_type = _key_type_to_redis_type(self.state["selected_type"].get())
+            filter = self.entry_list.filters.key_filter.get() + "*" if self.entry_list.filters.key_filter.get() else None
+            keys = self.client.scan_all(redis_type, filter)
+            self.entry_list.set_keys(keys)
+        except Exception as e:
+            messagebox.showerror("Error", "An error occurred while fetching keys. " + str(e))
 
     def delete_selected_key(self):
         key = self.state.get("selected_key")
-        self.client.delete(key)
+        confirmation = messagebox.askquestion("Delete Key", f'Are you sure you want to delete key: "{key}"?')
+        if confirmation == "no":
+            return
+        try:
+            self.client.delete(key)
+        except Exception as e:
+            messagebox.showerror("Error", "An error occurred while deleting key. " + str(e))
         self.state["selected_key"] = None
-        self.state["selected_key_type"] = None
         self.refresh_keys()
 
     def set_selected_key(self, key):
         print("Setting selected key:", key)
         self.state["selected_key"] = key
-        self.state["selected_key_type"] = self.state["selected_type"].get()
         self.entry_list.handle_key_selected()
 
     def add_key(self):
         match self.state["selected_type"].get():
             case KeyTypes.STRING.value:
+                @show_error
                 def create_key(key, value):
                     self.client.Strings.set(key, value)
                     self.refresh_keys()
                     self.set_selected_key(key)
+
                 AddStringModal(self, create_key)
             case KeyTypes.LIST.value:
+                @show_error
                 def create_key(key, value):
                     self.client.Lists.lpush(key, value)
                     self.refresh_keys()
                     self.set_selected_key(key)
+
                 AddListModal(self, create_key)
             case KeyTypes.SET.value:
+                @show_error
                 def create_key(key, value):
                     self.client.Sets.sadd(key, value)
                     self.refresh_keys()
                     self.set_selected_key(key)
+
                 AddListModal(self, create_key)
 
             case KeyTypes.SORTED_SET.value:
+                @show_error
                 def create_key(key, initial_value, initial_score):
-                    self.client.SortedSets.zadd(key,(initial_score, initial_value))
+                    self.client.SortedSets.zadd(key, (initial_score, initial_value))
                     self.refresh_keys()
                     self.set_selected_key(key)
+
                 AddZsetModal(self, create_key)
             case KeyTypes.HASH.value:
+                @show_error
                 def create_key(key, field, value):
                     self.client.Hashes.hset(key, (field, value))
                     self.refresh_keys()
                     self.set_selected_key(key)
+
                 AddHashModal(self, create_key)
             case _:
                 print("Not implemented")
-
-
-

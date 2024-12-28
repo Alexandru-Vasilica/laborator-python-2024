@@ -52,6 +52,13 @@ class EntryList(tk.Frame):
             selected_key = self.key_list.get(selected_index)
             self.master.set_selected_key(selected_key)
 
+    def _on_select_type(self):
+        self.master.refresh_keys()
+        if self.state["selected_type"].get() == KeyTypes.ALL.value:
+            self.toolbar.add_button.configure(state=tk.DISABLED)
+        else:
+            self.toolbar.add_button.configure(state=tk.NORMAL)
+
     def _create_key_list(self):
         self.key_list = tk.Listbox(self, selectmode=tk.SINGLE)
         self.key_list.configure(bg=Colors.LIGHT.value,
@@ -75,6 +82,7 @@ class EntryList(tk.Frame):
         self.toolbar.refresh_button.grid(row=0, column=0)
 
         self.toolbar.add_button = Button(self.toolbar, "Add", lambda: self.master.add_key())
+        self.toolbar.add_button.configure(state=tk.DISABLED)
         self.toolbar.add_button.grid(row=0, column=1)
 
         self.toolbar.delete_button = Button(self.toolbar, "Delete", lambda: self.master.delete_selected_key())
@@ -93,9 +101,8 @@ class EntryList(tk.Frame):
         self.filters.configure(bg=Colors.PRIMARY.value, padx=10, pady=5)
         self.current_type = self.state["selected_type"]
 
-        self.current_type.set(KeyTypes.STRING.value)
         self.filters.type_menu = tk.OptionMenu(self.filters, self.current_type, *[member.value for member in KeyTypes],
-                                               command=lambda _: self.master.refresh_keys())
+                                               command=lambda _: self._on_select_type())
         self.filters.type_menu.configure(width=10,
                                          font=(FONT, FontSizes.MEDIUM.value),
                                          bg=Colors.PRIMARY.value,
