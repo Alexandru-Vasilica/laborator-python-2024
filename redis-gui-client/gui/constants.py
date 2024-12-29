@@ -2,6 +2,7 @@ from enum import Enum
 
 FONT = "Arial"
 
+
 class KeyTypes(Enum):
     ALL = "All"
     STRING = "String"
@@ -10,12 +11,14 @@ class KeyTypes(Enum):
     SORTED_SET = "Sorted Set"
     HASH = "Hash"
 
+
 class Colors(Enum):
     BACKGROUND = "#18122B"
     FOREGROUND = "#393053"
     PRIMARY = "#443C68"
     LIGHT = "#635985"
     TEXT = "#F1F5F9"
+    TEXT_SECONDARY = "#E1D7B7"
 
 
 class FontSizes(Enum):
@@ -23,3 +26,5 @@ class FontSizes(Enum):
     MEDIUM = 12
     LARGE = 14
     EXTRA_LARGE = 16
+    TITLE = 30
+    SUBTITLE = 22

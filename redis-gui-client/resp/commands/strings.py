@@ -20,3 +20,19 @@ class Strings:
     def get(self, key: str):
         response = self.client.send_command("GET", key)
         return response.to_native()
+
+    def incr(self, key: str) -> int:
+        response = self.client.send_command("INCR", key)
+        return int(response.to_native())
+
+    def decr(self, key: str) -> int:
+        response = self.client.send_command("DECR", key)
+        return int(response.to_native())
+
+    def incrby(self, key: str, amount: int) -> int:
+        response = self.client.send_command("INCRBY", key, str(amount))
+        return int(response.to_native())
+
+    def decrby(self, key: str, amount: int) -> int:
+        response = self.client.send_command("DECRBY", key, str(amount))
+        return int(response.to_native())

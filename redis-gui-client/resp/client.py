@@ -80,3 +80,9 @@ class Client:
     def delete(self, *keys) -> int:
         result = self.send_command("DEL", *keys).to_native()
         return result
+
+    def type(self, key: str) -> str | None:
+        response = self.send_command("TYPE", key).to_native()
+        if response == "none":
+            return None
+        return response

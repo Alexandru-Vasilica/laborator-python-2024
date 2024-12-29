@@ -7,9 +7,10 @@ from gui.components.modals.add_string_modal import AddStringModal
 from gui.components.modals.add_zset_modal import AddZsetModal
 from gui.components.utils import show_error
 from gui.components.views.empty_view import EmptyView
+from gui.components.views.list_view import ListView
+from gui.components.views.string_view import StringView
 from gui.constants import KeyTypes
 from resp.client import Client
-from resp.resp_exception import RESPException
 from gui.entry_list import EntryList
 
 
@@ -40,7 +41,7 @@ class MainFrame(tk.Frame):
         self.refresh_keys()
 
         self.view = EmptyView(self)
-        self.view.grid(row=0, column=2, sticky="nsew")
+        self._set_view(None)
 
         self.columnconfigure(0, weight=0)
         self.columnconfigure(2, weight=1)
@@ -79,10 +80,31 @@ class MainFrame(tk.Frame):
         self.state["selected_key"] = None
         self.refresh_keys()
 
+    def _set_view(self, key_type):
+        key = self.state["selected_key"]
+        if self.view:
+            self.view.destroy()
+        match key_type:
+            case "string":
+                self.view = StringView(self, key)
+            case "list":
+                self.view = ListView(self, key)
+            case _:
+                print("Creating empty view", key_type)
+                self.view = EmptyView(self)
+        self.view.grid(row=0, column=2, sticky="nsew")
+
+
     def set_selected_key(self, key):
         print("Setting selected key:", key)
         self.state["selected_key"] = key
         self.entry_list.handle_key_selected()
+        try:
+            key_type = self.client.type(key)
+            self._set_view(key_type)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return
 
     def add_key(self):
         match self.state["selected_type"].get():
