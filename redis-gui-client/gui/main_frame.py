@@ -8,6 +8,7 @@ from gui.components.modals.add_zset_modal import AddZsetModal
 from gui.components.utils import show_error
 from gui.components.views.empty_view import EmptyView
 from gui.components.views.list_view import ListView
+from gui.components.views.set_view import SetView
 from gui.components.views.string_view import StringView
 from gui.constants import KeyTypes
 from resp.client import Client
@@ -89,6 +90,8 @@ class MainFrame(tk.Frame):
                 self.view = StringView(self, key)
             case "list":
                 self.view = ListView(self, key)
+            case "set":
+                self.view = SetView(self, key)
             case _:
                 print("Creating empty view", key_type)
                 self.view = EmptyView(self)

@@ -3,7 +3,6 @@ from __future__ import annotations
 import tkinter.messagebox
 from tkinter import *
 
-from gui.components.modals.range_input_modal import RangeInputModal
 from gui.components.modals.single_string_input_modal import SingleStringInputModal
 from gui.components.utils import show_error
 from resp.client import Client
@@ -16,10 +15,10 @@ if TYPE_CHECKING:
     from gui.main_frame import MainFrame
 
 
-class ListView(Frame):
+class SetView(Frame):
     client: Client
     key: str
-    value: list[str]
+    value: set[str]
     lenght: int
     master: MainFrame
 
@@ -29,47 +28,48 @@ class ListView(Frame):
         self.client = master.client
         self.key = key
         self._get_data()
+        self.selected_member = None
         self.configure(bg=Colors.BACKGROUND.value, padx=15, pady=20)
         self._create_widgets()
 
     def _get_data(self):
-        self.value = self.client.Lists.lrange(self.key, 0, -1)
-        self.lenght = self.client.Lists.llen(self.key)
+        self.value = self.client.Sets.smembers(self.key)
+        self.lenght = self.client.Sets.scard(self.key)
+
+    def set_member(self, member):
+        self.selected_member = member
+        if self.selected_member is not None:
+            self.controls.remove_button.config(state=NORMAL)
+        else:
+            self.controls.remove_button.config(state=DISABLED)
+
+    def _on_select_member(self, event):
+        if self.key_list.curselection():
+            self.set_member(self.key_list.get(self.key_list.curselection()))
+        else:
+            self.set_member(None)
 
     def _on_refresh(self):
         self.master.set_selected_key(self.key)
 
-    def _on_lpush(self):
+    def _on_add(self):
         @show_error
         def _on_submit(value):
-            self.client.Lists.lpush(self.key, value)
+            response = self.client.Sets.sadd(self.key, value)
+            if response == 0:
+                tkinter.messagebox.showinfo("Add", f"{value} already exists in the set")
             self._on_refresh()
-        SingleStringInputModal(self, "Lpush", "Value:", _on_submit)
 
-    def _on_rpush(self):
-        @show_error
-        def _on_submit(value):
-            self.client.Lists.rpush(self.key, value)
+        SingleStringInputModal(self, "Add", "Value:", _on_submit)
+
+    def _on_remove(self):
+        if self.selected_member is None:
+            return
+        answer = tkinter.messagebox.askyesno("Remove", f"Are you sure you want to remove {self.selected_member} from the set?")
+        if answer:
+            self.client.Sets.srem(self.key, self.selected_member)
+            self.set_member(None)
             self._on_refresh()
-        SingleStringInputModal(self, "Rpush", "Value:", _on_submit)
-    @show_error
-    def _on_lpop(self):
-        popped = self.client.Lists.lpop(self.key)
-        tkinter.messagebox.showinfo("Lpop", f"Popped value: {popped}")
-        self._on_refresh()
-
-    @show_error
-    def _on_rpop(self):
-        popped = self.client.Lists.rpop(self.key)
-        tkinter.messagebox.showinfo("Lpop", f"Popped value: {popped}")
-        self._on_refresh()
-
-    def _on_trim(self):
-        @show_error
-        def _on_submit(values):
-            self.client.Lists.ltrim(self.key, values[0], values[1])
-            self._on_refresh()
-        RangeInputModal(self, "Trim", _on_submit)
 
     def _create_widgets(self):
         self._create_data_display()
@@ -86,7 +86,7 @@ class ListView(Frame):
         key_display = Label(key_frame, text=self.key, font=(FONT, FontSizes.TITLE.value), bg=Colors.BACKGROUND.value,
                             fg=Colors.TEXT.value)
         key_display.pack(side=LEFT)
-        type_display = Label(key_frame, text="List", font=(FONT, FontSizes.SUBTITLE.value),
+        type_display = Label(key_frame, text="Set", font=(FONT, FontSizes.SUBTITLE.value),
                              bg=Colors.BACKGROUND.value,
                              fg=Colors.TEXT.value)
         type_display.pack(side=RIGHT)
@@ -124,32 +124,19 @@ class ListView(Frame):
         self.controls.pack(fill=X)
 
         self.controls.refresh_button = Button(self.controls, text="Refresh", command=self._on_refresh)
-        self.controls.refresh_button.grid(row=0, column=0, sticky="ewns")
+        self.controls.refresh_button.grid(row=0, column=0, sticky="ew")
 
-        self.controls.trim_button = Button(self.controls, text="Trim", command=self._on_trim)
-        self.controls.trim_button.grid(row=0, column=1, sticky="ewns")
+        self.controls.add_button = Button(self.controls, text="Add", command=self._on_add)
+        self.controls.add_button.grid(row=0, column=1, sticky="ew")
 
-        self.controls.lpush = Button(self.controls, text="Lpush", command=self._on_lpush)
-        self.controls.lpush.grid(row=1, column=0, sticky="ewns")
-
-        self.controls.rpush = Button(self.controls, text="Rpush", command=self._on_rpush)
-        self.controls.rpush.grid(row=1, column=1, sticky="ewns")
-
-        self.controls.lpop = Button(self.controls, text="Lpop", command=self._on_lpop)
-        if self.lenght == 0:
-            self.controls.lpop.configure(state=DISABLED)
-        self.controls.lpop.grid(row=2, column=0, sticky="ewns")
-
-        self.controls.rpop = Button(self.controls, text="Rpop", command=self._on_rpop)
-        if self.lenght == 0:
-            self.controls.rpop.configure(state=DISABLED)
-        self.controls.rpop.grid(row=2, column=1, sticky="ewns")
+        self.controls.remove_button = Button(self.controls, text="Remove", command=self._on_remove)
+        self.controls.remove_button.config(state=DISABLED)
+        self.controls.remove_button.grid(row=0, column=2, sticky="ew")
 
         self.controls.columnconfigure(0, weight=1)
         self.controls.columnconfigure(1, weight=1)
+        self.controls.columnconfigure(2, weight=1)
         self.controls.rowconfigure(0, weight=1)
-        self.controls.rowconfigure(1, weight=1)
-        self.controls.rowconfigure(2, weight=1)
 
     def _create_key_list(self):
         self.key_list = Listbox(self.list_frame, selectmode=SINGLE)
@@ -163,4 +150,4 @@ class ListView(Frame):
         self.key_list.pack(fill=BOTH, expand=True)
         for value in self.value:
             self.key_list.insert(END, value)
-
+        self.key_list.bind("<<ListboxSelect>>", self._on_select_member)
