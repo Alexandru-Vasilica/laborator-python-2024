@@ -3,6 +3,9 @@ from __future__ import annotations
 import tkinter.messagebox
 from tkinter import *
 
+from gui.components.modals.key_score_input_modal import KeyScoreInputModal
+from gui.components.modals.range_input_modal import RangeInputModal
+from gui.components.modals.single_number_input_modal import SingleNumberInputModal
 from gui.components.modals.single_string_input_modal import SingleStringInputModal
 from gui.components.utils import show_error
 from resp.client import Client
@@ -15,10 +18,10 @@ if TYPE_CHECKING:
     from gui.main_frame import MainFrame
 
 
-class SetView(Frame):
+class SortedSetView(Frame):
     client: Client
     key: str
-    value: set[str]
+    value: list[list[str, float]]
     length: int
     master: MainFrame
 
@@ -33,21 +36,24 @@ class SetView(Frame):
         self._create_widgets()
 
     def _get_data(self):
-        self.value = self.client.Sets.smembers(self.key)
-        self.length = self.client.Sets.scard(self.key)
+        self.value = self.client.SortedSets.zrange(self.key, 0, -1, with_scores=True)
+        self.length = self.client.SortedSets.zcard(self.key)
 
-    def set_member(self, member):
+    def set_selected_member(self, member):
         self.selected_member = member
         if self.selected_member is not None:
             self.controls.remove_button.config(state=NORMAL)
+            self.controls.change_score_button.config(state=NORMAL)
         else:
             self.controls.remove_button.config(state=DISABLED)
+            self.controls.change_score_button.config(state=DISABLED)
 
     def _on_select_member(self, event):
         if self.key_list.curselection():
-            self.set_member(self.key_list.get(self.key_list.curselection()))
+            selected = (self.key_list.get(self.key_list.curselection()))
+            self.set_selected_member(selected.split(" - ")[0])
         else:
-            self.set_member(None)
+            self.set_selected_member(None)
 
     def _on_refresh(self):
         self.master.set_selected_key(self.key)
@@ -55,21 +61,52 @@ class SetView(Frame):
     def _on_add(self):
         @show_error
         def _on_submit(value):
-            response = self.client.Sets.sadd(self.key, value)
-            if response == 0:
-                tkinter.messagebox.showinfo("Add", f"{value} already exists in the set")
+            self.client.SortedSets.zadd(self.key, value)
             self._on_refresh()
 
-        SingleStringInputModal(self, "Add", "Value:", _on_submit)
+        KeyScoreInputModal(self, "Add to Sorted Set", _on_submit)
 
+    def _on_change_score(self):
+        if self.selected_member is None:
+            return
+
+        @show_error
+        def _on_submit(score):
+            self.client.SortedSets.zincr_by(self.key,score, self.selected_member)
+            self._on_refresh()
+
+        SingleNumberInputModal(self, "Change Score", "Change score by:", _on_submit)
+
+    @show_error
     def _on_remove(self):
         if self.selected_member is None:
             return
-        answer = tkinter.messagebox.askyesno("Remove", f"Are you sure you want to remove {self.selected_member} from the set?")
+        answer = tkinter.messagebox.askyesno("Remove",
+                                             f"Are you sure you want to remove {self.selected_member} from the set?")
         if answer:
-            self.client.Sets.srem(self.key, self.selected_member)
-            self.set_member(None)
+            response = self.client.SortedSets.zrem(self.key, self.selected_member)
+            if response == 0:
+                tkinter.messagebox.showinfo("Remove", f"{self.selected_member} does not exist in the set")
+            self.set_selected_member(None)
             self._on_refresh()
+
+    @show_error
+    def _on_pop_max(self):
+        popped = self.client.SortedSets.zpop_max(self.key)
+        if popped is None:
+            tkinter.messagebox.showinfo("Pop Max", "Set is empty")
+            return
+        tkinter.messagebox.showinfo("Pop Max", f"Popped value: {popped[0][0]} with score: {popped[0][1]}")
+        self._on_refresh()
+
+    @show_error
+    def _on_pop_min(self):
+        popped = self.client.SortedSets.zpop_min(self.key)
+        if popped is None:
+            tkinter.messagebox.showinfo("Pop Min", "Set is empty")
+            return
+        tkinter.messagebox.showinfo("Pop Min", f"Popped value: {popped[0][0]} with score: {popped[0][1]}")
+        self._on_refresh()
 
     def _create_widgets(self):
         self._create_data_display()
@@ -86,7 +123,7 @@ class SetView(Frame):
         key_display = Label(key_frame, text=self.key, font=(FONT, FontSizes.TITLE.value), bg=Colors.BACKGROUND.value,
                             fg=Colors.TEXT.value)
         key_display.pack(side=LEFT)
-        type_display = Label(key_frame, text="Set", font=(FONT, FontSizes.SUBTITLE.value),
+        type_display = Label(key_frame, text="Sorted Set", font=(FONT, FontSizes.SUBTITLE.value),
                              bg=Colors.BACKGROUND.value,
                              fg=Colors.TEXT.value)
         type_display.pack(side=RIGHT)
@@ -124,19 +161,34 @@ class SetView(Frame):
         self.controls.pack(fill=X)
 
         self.controls.refresh_button = Button(self.controls, text="Refresh", command=self._on_refresh)
-        self.controls.refresh_button.grid(row=0, column=0, sticky="ew")
+        self.controls.refresh_button.grid(row=0, column=0, sticky="ewns")
 
         self.controls.add_button = Button(self.controls, text="Add", command=self._on_add)
-        self.controls.add_button.grid(row=0, column=1, sticky="ew")
+        self.controls.add_button.grid(row=0, column=1, sticky="ewns")
+
+        self.controls.change_score_button = Button(self.controls, text="Change Score", command=self._on_change_score)
+        self.controls.change_score_button.configure(state=DISABLED)
+        self.controls.change_score_button.grid(row=0, column=2, sticky="ewns")
 
         self.controls.remove_button = Button(self.controls, text="Remove", command=self._on_remove)
-        self.controls.remove_button.config(state=DISABLED)
-        self.controls.remove_button.grid(row=0, column=2, sticky="ew")
+        self.controls.remove_button.configure(state=DISABLED)
+        self.controls.remove_button.grid(row=1, column=0, sticky="ewns")
+
+        self.controls.pop_max_button = Button(self.controls, text="Pop Max", command=self._on_pop_max)
+        if self.length == 0:
+            self.controls.pop_max_button.configure(state=DISABLED)
+        self.controls.pop_max_button.grid(row=1, column=2, sticky="ewns")
+
+        self.controls.pop_min_button = Button(self.controls, text="Pop Min", command=self._on_pop_min)
+        if self.length == 0:
+            self.controls.pop_min_button.configure(state=DISABLED)
+        self.controls.pop_min_button.grid(row=1, column=1, sticky="ewns")
 
         self.controls.columnconfigure(0, weight=1)
         self.controls.columnconfigure(1, weight=1)
         self.controls.columnconfigure(2, weight=1)
         self.controls.rowconfigure(0, weight=1)
+        self.controls.rowconfigure(1, weight=1)
 
     def _create_key_list(self):
         self.key_list = Listbox(self.list_frame, selectmode=SINGLE)
@@ -149,5 +201,5 @@ class SetView(Frame):
                                 )
         self.key_list.pack(fill=BOTH, expand=True)
         for value in self.value:
-            self.key_list.insert(END, value)
+            self.key_list.insert(END, f'{value[0]} - Score: {value[1]}')
         self.key_list.bind("<<ListboxSelect>>", self._on_select_member)

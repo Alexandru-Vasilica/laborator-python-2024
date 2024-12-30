@@ -20,7 +20,7 @@ class ListView(Frame):
     client: Client
     key: str
     value: list[str]
-    lenght: int
+    length: int
     master: MainFrame
 
     def __init__(self, master: MainFrame, key):
@@ -34,7 +34,7 @@ class ListView(Frame):
 
     def _get_data(self):
         self.value = self.client.Lists.lrange(self.key, 0, -1)
-        self.lenght = self.client.Lists.llen(self.key)
+        self.length = self.client.Lists.llen(self.key)
 
     def _on_refresh(self):
         self.master.set_selected_key(self.key)
@@ -101,7 +101,7 @@ class ListView(Frame):
                              bg=Colors.BACKGROUND.value,
                              fg=Colors.TEXT_SECONDARY.value)
         length_label.pack(side=LEFT)
-        value_display = Label(length_frame, text=self.lenght, font=(FONT, FontSizes.TITLE.value),
+        value_display = Label(length_frame, text=self.length, font=(FONT, FontSizes.TITLE.value),
                               bg=Colors.BACKGROUND.value,
                               fg=Colors.TEXT.value)
         value_display.pack(side=LEFT)
@@ -136,12 +136,12 @@ class ListView(Frame):
         self.controls.rpush.grid(row=1, column=1, sticky="ewns")
 
         self.controls.lpop = Button(self.controls, text="Lpop", command=self._on_lpop)
-        if self.lenght == 0:
+        if self.length == 0:
             self.controls.lpop.configure(state=DISABLED)
         self.controls.lpop.grid(row=2, column=0, sticky="ewns")
 
         self.controls.rpop = Button(self.controls, text="Rpop", command=self._on_rpop)
-        if self.lenght == 0:
+        if self.length == 0:
             self.controls.rpop.configure(state=DISABLED)
         self.controls.rpop.grid(row=2, column=1, sticky="ewns")
 

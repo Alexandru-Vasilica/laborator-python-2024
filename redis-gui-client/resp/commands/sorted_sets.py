@@ -69,3 +69,11 @@ class SortedSets:
             cursor, new_members = self.zscan(key, cursor, match=match)
             members.update(new_members)
         return members
+
+    def zincr_by(self, key: str, increment: float, member: str) -> float:
+        response = self.client.send_command("ZINCRBY", key, str(increment), member)
+        return response.to_native()
+
+    def zrem(self, key: str, *members: str) -> int:
+        response = self.client.send_command("ZREM", key, *members)
+        return response.to_native()

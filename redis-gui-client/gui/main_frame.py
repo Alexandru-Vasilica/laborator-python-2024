@@ -9,6 +9,7 @@ from gui.components.utils import show_error
 from gui.components.views.empty_view import EmptyView
 from gui.components.views.list_view import ListView
 from gui.components.views.set_view import SetView
+from gui.components.views.sorted_set_view import SortedSetView
 from gui.components.views.string_view import StringView
 from gui.constants import KeyTypes
 from resp.client import Client
@@ -92,6 +93,8 @@ class MainFrame(tk.Frame):
                 self.view = ListView(self, key)
             case "set":
                 self.view = SetView(self, key)
+            case "zset":
+                self.view = SortedSetView(self, key)
             case _:
                 print("Creating empty view", key_type)
                 self.view = EmptyView(self)
