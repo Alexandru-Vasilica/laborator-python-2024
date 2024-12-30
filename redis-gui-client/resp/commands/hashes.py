@@ -65,3 +65,8 @@ class Hashes:
             members.update(new_members)
         return members
 
+
+    def hincr_by(self, key: str, field: str, increment: int) -> int:
+        response = self.client.send_command("HINCRBY", key, field, str(increment))
+        return response.to_native()
+

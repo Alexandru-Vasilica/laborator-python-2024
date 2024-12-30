@@ -7,6 +7,7 @@ from gui.components.modals.add_string_modal import AddStringModal
 from gui.components.modals.add_zset_modal import AddZsetModal
 from gui.components.utils import show_error
 from gui.components.views.empty_view import EmptyView
+from gui.components.views.hash_view import HashView
 from gui.components.views.list_view import ListView
 from gui.components.views.set_view import SetView
 from gui.components.views.sorted_set_view import SortedSetView
@@ -95,6 +96,8 @@ class MainFrame(tk.Frame):
                 self.view = SetView(self, key)
             case "zset":
                 self.view = SortedSetView(self, key)
+            case "hash":
+                self.view = HashView(self, key)
             case _:
                 print("Creating empty view", key_type)
                 self.view = EmptyView(self)
