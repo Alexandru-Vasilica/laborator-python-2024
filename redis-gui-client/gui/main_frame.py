@@ -77,7 +77,7 @@ class MainFrame(tk.Frame):
             self.client.delete(key)
         except Exception as e:
             messagebox.showerror("Error", "An error occurred while deleting key. " + str(e))
-        self.state["selected_key"] = None
+        self.set_selected_key(None)
         self.refresh_keys()
 
     def _set_view(self, key_type):
@@ -94,13 +94,12 @@ class MainFrame(tk.Frame):
                 self.view = EmptyView(self)
         self.view.grid(row=0, column=2, sticky="nsew")
 
-
     def set_selected_key(self, key):
         print("Setting selected key:", key)
         self.state["selected_key"] = key
         self.entry_list.handle_key_selected()
         try:
-            key_type = self.client.type(key)
+            key_type = self.client.type(key) if key else None
             self._set_view(key_type)
         except Exception as e:
             messagebox.showerror("Error", str(e))

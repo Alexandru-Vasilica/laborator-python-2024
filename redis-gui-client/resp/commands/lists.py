@@ -40,3 +40,6 @@ class Lists:
     def lrange(self, key: str, start: int = 0, stop: int = -1):
         response = self.client.send_command("LRANGE", key, str(start), str(stop))
         return response.to_native()
+
+    def ltrim(self, key: str, start: int, stop: int):
+        self.client.send_command("LTRIM", key, str(start), str(stop)).to_native()
