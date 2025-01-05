@@ -99,12 +99,10 @@ class MainFrame(tk.Frame):
             case "hash":
                 self.view = HashView(self, key)
             case _:
-                print("Creating empty view", key_type)
                 self.view = EmptyView(self)
         self.view.grid(row=0, column=2, sticky="nsew")
 
     def set_selected_key(self, key):
-        print("Setting selected key:", key)
         self.state["selected_key"] = key
         self.entry_list.handle_key_selected()
         try:
@@ -158,4 +156,5 @@ class MainFrame(tk.Frame):
 
                 AddHashModal(self, create_key)
             case _:
-                print("Not implemented")
+                messagebox.showerror("Error", "Please select a key type to add.")
+                return

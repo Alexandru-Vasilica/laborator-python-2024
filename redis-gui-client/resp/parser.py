@@ -10,6 +10,7 @@ import resp.types.redis_map as redis_map
 import resp.types.redis_bool as redis_bool
 import resp.types.redis_null as redis_null
 import resp.types.redis_set as redis_set
+from resp.resp_exception import RESPException
 
 
 def parse_redis_response(sock: socket):
@@ -38,6 +39,4 @@ def parse_redis_response(sock: socket):
         case '%':
             return redis_map.RedisMap.from_socket(sock)
         case _:
-            print(f'Unknown response type: {response_type}')
-            sock.recv(4096)
-            return None
+            raise RESPException(f"Unknown response type: {response_type}")

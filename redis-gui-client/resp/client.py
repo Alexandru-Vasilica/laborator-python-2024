@@ -37,12 +37,11 @@ class Client:
 
     def _read_response(self):
         response = parse_redis_response(self.socket)
-        return response
+        return response.to_native()
 
     def _handshake(self):
         self.socket.sendall(f'HELLO {PROTOCOL_VERSION}\r\n'.encode('ascii'))
-        response = self._read_response()
-        print(response)
+        self._read_response()
 
     def connect(self):
         server_address = (self.host, self.port)
