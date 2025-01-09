@@ -3,6 +3,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisDouble(RedisType):
+    """
+    Represents a Redis double
+    """
     value: float
 
     def __init__(self, value: float):

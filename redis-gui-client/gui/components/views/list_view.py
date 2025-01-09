@@ -17,13 +17,16 @@ if TYPE_CHECKING:
 
 
 class ListView(Frame):
+    """
+    A view for a Redis list
+    """
     client: Client
     key: str
     value: list[str]
     length: int
     master: MainFrame
 
-    def __init__(self, master: MainFrame, key):
+    def __init__(self, master: MainFrame, key: str):
         super().__init__(master)
         self.master = master
         self.client = master.client
@@ -33,45 +36,81 @@ class ListView(Frame):
         self._create_widgets()
 
     def _get_data(self):
+        """
+        Get the data for the list
+        :return:
+        """
         self.value = self.client.Lists.lrange(self.key, 0, -1)
         self.length = self.client.Lists.llen(self.key)
 
     def _on_refresh(self):
+        """
+        Refresh the view
+        :return:
+        """
         self.master.set_selected_key(self.key)
 
     def _on_lpush(self):
+        """
+        Handle the Lpush button press
+        :return:
+        """
         @show_error
         def _on_submit(value):
             self.client.Lists.lpush(self.key, value)
             self._on_refresh()
+
         SingleStringInputModal(self, "Lpush", "Value:", _on_submit)
 
     def _on_rpush(self):
+        """
+        Handle the Rpush button press
+        :return:
+        """
         @show_error
         def _on_submit(value):
             self.client.Lists.rpush(self.key, value)
             self._on_refresh()
+
         SingleStringInputModal(self, "Rpush", "Value:", _on_submit)
+
     @show_error
     def _on_lpop(self):
+        """
+        Handle the Lpop button press
+        :return:
+        """
         popped = self.client.Lists.lpop(self.key)
         tkinter.messagebox.showinfo("Lpop", f"Popped value: {popped}")
         self._on_refresh()
 
     @show_error
     def _on_rpop(self):
+        """
+        Handle the Rpop button press
+        :return:
+        """
         popped = self.client.Lists.rpop(self.key)
         tkinter.messagebox.showinfo("Lpop", f"Popped value: {popped}")
         self._on_refresh()
 
     def _on_trim(self):
+        """
+        Handle the trim button press
+        :return:
+        """
         @show_error
         def _on_submit(values):
             self.client.Lists.ltrim(self.key, values[0], values[1])
             self._on_refresh()
+
         RangeInputModal(self, "Trim", _on_submit)
 
     def _create_widgets(self):
+        """
+        Create the widgets of the view
+        :return:
+        """
         self._create_data_display()
         self.list_frame = Frame(self, bg=Colors.BACKGROUND.value)
         self.list_frame.pack(fill=Y, expand=True)
@@ -79,6 +118,10 @@ class ListView(Frame):
         self._create_key_list()
 
     def _create_data_display(self):
+        """
+        Create the data display
+        :return:
+        """
         key_frame = Frame(self, bg=Colors.BACKGROUND.value)
         key_label = Label(key_frame, text="Key:", font=(FONT, FontSizes.TITLE.value), bg=Colors.BACKGROUND.value,
                           fg=Colors.TEXT_SECONDARY.value)
@@ -116,6 +159,10 @@ class ListView(Frame):
         key_list_frame.pack(fill=X)
 
     def _create_controls(self):
+        """
+        Create the controls for the list
+        :return:
+        """
         self.controls = Frame(self.list_frame, bg=Colors.PRIMARY.value, padx=5, pady=5)
         controls_label = Label(self.list_frame, text="Controls", font=(FONT, FontSizes.TITLE.value),
                                bg=Colors.PRIMARY.value,
@@ -152,6 +199,10 @@ class ListView(Frame):
         self.controls.rowconfigure(2, weight=1)
 
     def _create_key_list(self):
+        """
+        Create the list of members
+        :return:
+        """
         self.key_list = Listbox(self.list_frame, selectmode=SINGLE)
         self.key_list.configure(bg=Colors.LIGHT.value,
                                 fg=Colors.TEXT.value,
@@ -163,4 +214,3 @@ class ListView(Frame):
         self.key_list.pack(fill=BOTH, expand=True)
         for value in self.value:
             self.key_list.insert(END, value)
-

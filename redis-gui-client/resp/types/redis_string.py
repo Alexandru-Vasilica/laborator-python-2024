@@ -3,6 +3,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisString(RedisType):
+    """
+    Represents a Redis string
+    """
     value: str
 
     def __init__(self, value: str):

@@ -2,6 +2,11 @@ from socket import socket
 
 
 def read_until_delimiter(sock: socket) -> str:
+    """
+    Read from a socket until the sequence \r\n is found
+    :param sock:  The socket to read from
+    :return: The decoded string
+    """
     data = b''
     last_byte = None
     while True:

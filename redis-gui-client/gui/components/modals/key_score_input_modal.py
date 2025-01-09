@@ -6,7 +6,7 @@ from gui.constants import *
 
 class KeyScoreInputModal(FormModal):
 
-    def __init__(self, master, title, on_submit):
+    def __init__(self, master, title: str, on_submit: callable):
         self.on_submit = on_submit
         self.error = None
         super().__init__(master, "300x200", title, self._validate_form, self._on_submit, button_text="Submit")
@@ -53,6 +53,11 @@ class KeyScoreInputModal(FormModal):
         return True
 
     def _show_error(self, error_message):
+        """
+        Show an error message
+        :param error_message: The error message to show
+        :return:
+        """
         if self.error is not None:
             self.error.destroy()
         self.error = Label(self, text=error_message)
@@ -60,6 +65,10 @@ class KeyScoreInputModal(FormModal):
         self.error.pack(side=TOP)
 
     def _on_submit(self):
+        """
+        Submit the form
+        :return:
+        """
         if not self._validate_form():
             return
         value = (float(self.form.score_input.get()), self.form.key_input.get())

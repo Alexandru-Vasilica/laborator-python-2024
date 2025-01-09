@@ -3,6 +3,9 @@ from tkinter import Button as TkButton
 
 
 class Button(TkButton):
+    """
+    A styled button
+    """
     def __init__(self, master, text, command):
         super().__init__(master, text=text, command=command)
         self.configure(bg=Colors.PRIMARY.value, fg=Colors.TEXT.value, font=("Arial", FontSizes.MEDIUM.value),

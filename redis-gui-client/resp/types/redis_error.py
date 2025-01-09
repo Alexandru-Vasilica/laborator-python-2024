@@ -2,7 +2,11 @@ from resp.types.redis_type import RedisType
 from resp.utils import read_until_delimiter
 from resp.resp_exception import RESPException
 
+
 class RedisError(RedisType):
+    """
+    Represents a Redis error
+    """
     value: str
 
     def __init__(self, message):

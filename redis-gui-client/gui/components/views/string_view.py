@@ -16,12 +16,15 @@ if TYPE_CHECKING:
 
 
 class StringView(Frame):
+    """
+    A view for a Redis string
+    """
     client: Client
     key: str
     value: str
     master: MainFrame
 
-    def __init__(self, master: MainFrame, key):
+    def __init__(self, master: MainFrame, key: str):
         super().__init__(master)
         self.master = master
         self.client = master.client
@@ -31,15 +34,27 @@ class StringView(Frame):
         self._create_widgets()
 
     def _get_data(self):
+        """
+        Get the data for the string
+        :return:
+        """
         self.value = self.client.Strings.get(self.key)
         if self.value is None:
             raise Exception(f"Key '{self.key}' does not exist.")
 
     def _create_widgets(self):
+        """
+        Create the widgets of the component
+        :return:
+        """
         self._crete_data_display()
         self._create_controls()
 
     def _crete_data_display(self):
+        """
+        Create the data display
+        :return:
+        """
         key_frame = Frame(self, bg=Colors.BACKGROUND.value)
         key_label = Label(key_frame, text="Key:", font=(FONT, FontSizes.TITLE.value), bg=Colors.BACKGROUND.value,
                           fg=Colors.TEXT_SECONDARY.value)
@@ -68,6 +83,10 @@ class StringView(Frame):
         value_frame.pack(fill=X)
 
     def _on_change_value(self):
+        """
+        Change the value of the string
+        :return:
+        """
         @show_error
         def _on_submit(new_value):
             self.client.Strings.set(self.key, new_value)
@@ -77,10 +96,18 @@ class StringView(Frame):
 
     @show_error
     def _on_increment_value(self):
+        """
+        Increment the value of the string
+        :return:
+        """
         self.client.Strings.incr(self.key)
         self.master.set_selected_key(self.key)
 
     def _on_increment_by_value(self):
+        """
+        Increment the value of the string by a specified amount
+        :return:
+        """
         @show_error
         def _on_submit(increment_value):
             self.client.Strings.incrby(self.key, increment_value)
@@ -89,6 +116,10 @@ class StringView(Frame):
         SingleNumberInputModal(self.master, "Increment Value", "Increment Amount", _on_submit)
 
     def _on_decrement_by_value(self):
+        """
+        Decrement the value of the string by a specified amount
+        :return:
+        """
         @show_error
         def _on_submit(decrement_value):
             self.client.Strings.decrby(self.key, decrement_value)
@@ -98,10 +129,18 @@ class StringView(Frame):
 
     @show_error
     def _on_decrement_value(self):
+        """
+        Decrement the value of the string
+        :return:
+        """
         self.client.Strings.decr(self.key)
         self.master.set_selected_key(self.key)
 
     def _create_controls(self):
+        """
+        Create the controls for the view
+        :return:
+        """
         controls_frame = Frame(self, bg=Colors.PRIMARY.value, width=300, height=300, pady=10)
         title = Label(controls_frame, text="Controls", font=(FONT, FontSizes.SUBTITLE.value), bg=Colors.PRIMARY.value,
                       fg=Colors.TEXT.value)

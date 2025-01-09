@@ -3,6 +3,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisBool(RedisType):
+    """
+    Represents a Redis bool
+    """
     value: bool
 
     def __init__(self, value: bool):

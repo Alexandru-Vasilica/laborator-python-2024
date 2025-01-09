@@ -1,7 +1,11 @@
 from resp.types.redis_type import RedisType
 from resp.utils import read_until_delimiter
 
+
 class RedisNull(RedisType):
+    """
+    Represents a Redis null
+    """
     value: None
 
     def __init__(self):
@@ -17,4 +21,3 @@ class RedisNull(RedisType):
 
     def __str__(self):
         return 'RedisNull'
-

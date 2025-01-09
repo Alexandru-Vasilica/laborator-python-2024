@@ -1,8 +1,12 @@
 from resp.types.redis_type import RedisType
 from resp.utils import read_until_delimiter
-from resp.resp_exception import RespException
+from resp.resp_exception import RESPException
+
 
 class RedisBulkError(RedisType):
+    """
+    Represents a Redis bulk error
+    """
     value: str
 
     def __init__(self, value: str):
@@ -18,7 +22,7 @@ class RedisBulkError(RedisType):
         return f'!{len(self.value)}\r\n{self.value}\r\n'.encode('ascii')
 
     def to_native(self):
-        raise RespException(self.value)
+        raise RESPException(self.value)
 
     def __str__(self):
         return f'RedisBulkError({len(self.value)}): {self.value}'

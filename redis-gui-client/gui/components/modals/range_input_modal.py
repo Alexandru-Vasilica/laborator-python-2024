@@ -5,8 +5,11 @@ from gui.constants import *
 
 
 class RangeInputModal(FormModal):
+    """
+    A modal for inputting a range
+    """
 
-    def __init__(self, master, title, on_submit):
+    def __init__(self, master, title: str, on_submit: callable):
         self.on_submit = on_submit
         self.error = None
         super().__init__(master, "300x200", title, self._validate_form, self._on_submit, button_text="Submit")
@@ -58,6 +61,11 @@ class RangeInputModal(FormModal):
         return True
 
     def _show_error(self, error_message):
+        """
+        Show an error message
+        :param error_message:  The error message to show
+        :return:
+        """
         if self.error is not None:
             self.error.destroy()
         self.error = Label(self, text=error_message)
@@ -65,6 +73,10 @@ class RangeInputModal(FormModal):
         self.error.pack(side=TOP)
 
     def _on_submit(self):
+        """
+        Submit the form
+        :return:
+        """
         if not self._validate_form():
             return
         value = (int(self.form.start_input.get()), int(self.form.end_input.get()))

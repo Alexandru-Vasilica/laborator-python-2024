@@ -4,6 +4,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisSet(RedisType):
+    """
+    Represents a Redis set
+    """
     value: set
 
     def __init__(self, value: set):

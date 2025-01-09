@@ -5,9 +5,13 @@ from resp.client import Client
 
 
 class AddZsetModal(FormModal):
-    client: Client
+    """
+    A modal for adding a zset
+    """
+    create_key: callable
+    error: Label | None
 
-    def __init__(self, master, create_key):
+    def __init__(self, master, create_key: callable):
         super().__init__(master, "700x400", "Add List", self._validate_form, self.add_key)
         self.create_key = create_key
         self.error = None
@@ -74,6 +78,11 @@ class AddZsetModal(FormModal):
         return True
 
     def _show_error(self, error_message):
+        """
+        Show an error message
+        :param error_message:  The error message to show
+        :return:
+        """
         if self.error is not None:
             self.error.destroy()
         self.error = Label(self, text=error_message)
@@ -81,6 +90,10 @@ class AddZsetModal(FormModal):
         self.error.pack(side=TOP)
 
     def add_key(self):
+        """
+        Add the key
+        :return:
+        """
         if not self._validate_form():
             return
         key = self.form.key_entry.get()

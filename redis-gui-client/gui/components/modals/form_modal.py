@@ -5,6 +5,12 @@ from gui.constants import *
 
 
 class FormModal(Toplevel):
+    """
+    A modal for a form
+    """
+    validate_form: callable
+    button_text: str
+    on_submit_form: callable
 
     def __init__(self, master, geometry, title, validate_form, on_submit, button_text="Add"):
         super().__init__(master)
@@ -18,15 +24,27 @@ class FormModal(Toplevel):
         self.on_submit_form = on_submit
 
     def _create_form(self) -> Frame:
+        """
+        Create the form
+        :return:
+        """
         pass
 
     def _submit_form(self):
+        """
+        Validate the form and submit it
+        :return:
+        """
         if not self.validate_form():
             return
         self.on_submit_form()
         self.destroy()
 
     def _create_widgets(self):
+        """
+        Create the widgets of the component
+        :return:
+        """
         form = self._create_form()
         form.pack(side=TOP, fill=BOTH, expand=True)
         button_frame = Frame(self)

@@ -16,13 +16,16 @@ if TYPE_CHECKING:
 
 
 class SetView(Frame):
+    """
+    A view for a Redis set
+    """
     client: Client
     key: str
     value: set[str]
     length: int
     master: MainFrame
 
-    def __init__(self, master: MainFrame, key):
+    def __init__(self, master: MainFrame, key:str):
         super().__init__(master)
         self.master = master
         self.client = master.client
@@ -33,10 +36,19 @@ class SetView(Frame):
         self._create_widgets()
 
     def _get_data(self):
+        """
+        Get the data for the set
+        :return:
+        """
         self.value = self.client.Sets.smembers(self.key)
         self.length = self.client.Sets.scard(self.key)
 
     def set_member(self, member):
+        """
+        Set the selected member
+        :param member:  The member to set
+        :return:
+        """
         self.selected_member = member
         if self.selected_member is not None:
             self.controls.remove_button.config(state=NORMAL)
@@ -44,15 +56,28 @@ class SetView(Frame):
             self.controls.remove_button.config(state=DISABLED)
 
     def _on_select_member(self, event):
+        """
+        Handle the selection of a member
+        :param event:
+        :return:
+        """
         if self.key_list.curselection():
             self.set_member(self.key_list.get(self.key_list.curselection()))
         else:
             self.set_member(None)
 
     def _on_refresh(self):
+        """
+        Refresh the view
+        :return:
+        """
         self.master.set_selected_key(self.key)
 
     def _on_add(self):
+        """
+        Handle the Add button press
+        :return:
+        """
         @show_error
         def _on_submit(value):
             response = self.client.Sets.sadd(self.key, value)
@@ -63,6 +88,10 @@ class SetView(Frame):
         SingleStringInputModal(self, "Add", "Value:", _on_submit)
 
     def _on_remove(self):
+        """
+        Handle the Remove button press
+        :return:
+        """
         if self.selected_member is None:
             return
         answer = tkinter.messagebox.askyesno("Remove", f"Are you sure you want to remove {self.selected_member} from the set?")
@@ -72,6 +101,10 @@ class SetView(Frame):
             self._on_refresh()
 
     def _create_widgets(self):
+        """
+        Create the widgets of the component
+        :return:
+        """
         self._create_data_display()
         self.list_frame = Frame(self, bg=Colors.BACKGROUND.value)
         self.list_frame.pack(fill=Y, expand=True)
@@ -79,6 +112,10 @@ class SetView(Frame):
         self._create_key_list()
 
     def _create_data_display(self):
+        """
+        Create the data display
+        :return:
+        """
         key_frame = Frame(self, bg=Colors.BACKGROUND.value)
         key_label = Label(key_frame, text="Key:", font=(FONT, FontSizes.TITLE.value), bg=Colors.BACKGROUND.value,
                           fg=Colors.TEXT_SECONDARY.value)
@@ -116,6 +153,10 @@ class SetView(Frame):
         key_list_frame.pack(fill=X)
 
     def _create_controls(self):
+        """
+        Create the controls for the list
+        :return:
+        """
         self.controls = Frame(self.list_frame, bg=Colors.PRIMARY.value, padx=5, pady=5)
         controls_label = Label(self.list_frame, text="Controls", font=(FONT, FontSizes.TITLE.value),
                                bg=Colors.PRIMARY.value,
@@ -139,6 +180,10 @@ class SetView(Frame):
         self.controls.rowconfigure(0, weight=1)
 
     def _create_key_list(self):
+        """
+        Create the list of members
+        :return:
+        """
         self.key_list = Listbox(self.list_frame, selectmode=SINGLE)
         self.key_list.configure(bg=Colors.LIGHT.value,
                                 fg=Colors.TEXT.value,

@@ -3,6 +3,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisBulkString(RedisType):
+    """
+    Represents a Redis bulk string
+    """
     value: str
 
     def __init__(self, value: str):

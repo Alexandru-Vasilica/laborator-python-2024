@@ -4,6 +4,9 @@ FONT = "Arial"
 
 
 class KeyTypes(Enum):
+    """
+    Enum for the different types of keys in Redis and their corresponding names
+    """
     ALL = "All"
     STRING = "String"
     LIST = "List"
@@ -13,6 +16,9 @@ class KeyTypes(Enum):
 
 
 class Colors(Enum):
+    """
+    Enum for the different colors used in the GUI
+    """
     BACKGROUND = "#18122B"
     FOREGROUND = "#393053"
     PRIMARY = "#443C68"
@@ -22,6 +28,9 @@ class Colors(Enum):
 
 
 class FontSizes(Enum):
+    """
+    Enum for the different font sizes used in the GUI
+    """
     SMALL = 10
     MEDIUM = 12
     LARGE = 14

@@ -18,6 +18,11 @@ from gui.entry_list import EntryList
 
 
 def _key_type_to_redis_type(key_type: str) -> str:
+    """
+    Convert a key type to a Redis type
+    :param key_type: requested key type
+    :return: the corresponding Redis type
+    """
     return {
         KeyTypes.STRING.value: "string",
         KeyTypes.LIST.value: "list",
@@ -29,6 +34,9 @@ def _key_type_to_redis_type(key_type: str) -> str:
 
 
 class MainFrame(tk.Frame):
+    """
+    The main frame of the application
+    """
     client: Client
     root: tk.Tk
 
@@ -50,12 +58,11 @@ class MainFrame(tk.Frame):
         self.columnconfigure(2, weight=1)
         self.rowconfigure(0, weight=1)
 
-    def run(self):
-        self.client = Client()
-        self.client.connect()
-        self.root.mainloop()
-
     def _init_state(self):
+        """
+        Initialize the state of the component
+        :return:
+        """
         self.state = {
             "selected_type": StringVar(),
             "selected_key": None
@@ -63,6 +70,10 @@ class MainFrame(tk.Frame):
         self.state["selected_type"].set(KeyTypes.ALL.value)
 
     def refresh_keys(self):
+        """
+        Refresh the keys in the list
+        :return:
+        """
         try:
             redis_type = _key_type_to_redis_type(self.state["selected_type"].get())
             filter = self.entry_list.filters.key_filter.get() + "*" if self.entry_list.filters.key_filter.get() else None
@@ -72,6 +83,10 @@ class MainFrame(tk.Frame):
             messagebox.showerror("Error", "An error occurred while fetching keys. " + str(e))
 
     def delete_selected_key(self):
+        """
+        Delete the selected key from the store
+        :return:
+        """
         key = self.state.get("selected_key")
         confirmation = messagebox.askquestion("Delete Key", f'Are you sure you want to delete key: "{key}"?')
         if confirmation == "no":
@@ -84,6 +99,11 @@ class MainFrame(tk.Frame):
         self.refresh_keys()
 
     def _set_view(self, key_type):
+        """
+        Set the view based on the selected key type
+        :param key_type: the selected key type
+        :return:
+        """
         key = self.state["selected_key"]
         if self.view:
             self.view.destroy()
@@ -103,6 +123,11 @@ class MainFrame(tk.Frame):
         self.view.grid(row=0, column=2, sticky="nsew")
 
     def set_selected_key(self, key):
+        """
+        Sets the selected key and updates the view
+        :param key:
+        :return:
+        """
         self.state["selected_key"] = key
         self.entry_list.handle_key_selected()
         try:
@@ -113,6 +138,10 @@ class MainFrame(tk.Frame):
             return
 
     def add_key(self):
+        """
+        Add a key to the store
+        :return:
+        """
         match self.state["selected_type"].get():
             case KeyTypes.STRING.value:
                 @show_error

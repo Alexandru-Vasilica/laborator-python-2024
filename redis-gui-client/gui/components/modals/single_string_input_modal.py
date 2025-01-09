@@ -5,8 +5,11 @@ from gui.constants import *
 
 
 class SingleStringInputModal(FormModal):
+    """
+    A modal for inputting a single string
+    """
 
-    def __init__(self, master, title, label, on_submit, default_value=None):
+    def __init__(self, master, title: str, label: str, on_submit: callable, default_value=None):
         self.on_submit = on_submit
         self.label = label
         self.error = None
@@ -39,6 +42,11 @@ class SingleStringInputModal(FormModal):
         return True
 
     def _show_error(self, error_message):
+        """
+        Show an error message
+        :param error_message:  The error message to show
+        :return:
+        """
         if self.error is not None:
             self.error.destroy()
         self.error = Label(self, text=error_message)
@@ -46,6 +54,10 @@ class SingleStringInputModal(FormModal):
         self.error.pack(side=TOP)
 
     def _on_submit(self):
+        """
+        Handle the submit button being clicked
+        :return:
+        """
         if not self._validate_form():
             return
         value = self.form.input.get()

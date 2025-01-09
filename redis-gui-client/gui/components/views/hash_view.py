@@ -18,13 +18,16 @@ if TYPE_CHECKING:
 
 
 class HashView(Frame):
+    """
+    A view for a hash key
+    """
     client: Client
     key: str
     value: dict[str, str]
     length: int
     master: MainFrame
 
-    def __init__(self, master: MainFrame, key):
+    def __init__(self, master: MainFrame, key: str):
         super().__init__(master)
         self.master = master
         self.client = master.client
@@ -35,10 +38,19 @@ class HashView(Frame):
         self._create_widgets()
 
     def _get_data(self):
+        """
+        Get the data for the hash key
+        :return:
+        """
         self.value = self.client.Hashes.hget_all(self.key)
         self.length = self.client.Hashes.hlen(self.key)
 
     def set_selected_member(self, member):
+        """
+        Set the selected member of the hash
+        :param member: The member to select
+        :return:
+        """
         self.selected_member = member
         if self.selected_member is not None:
             self.controls.remove_button.config(state=NORMAL)
@@ -52,6 +64,11 @@ class HashView(Frame):
             self.controls.incr_by_button.config(state=DISABLED)
 
     def _on_select_member(self, event):
+        """
+        A callback for when a member is selected
+        :param event: The event
+        :return:
+        """
         if self.key_list.curselection():
             selected = (self.key_list.get(self.key_list.curselection()))
             self.set_selected_member(selected.split(" - ")[0])
@@ -59,9 +76,18 @@ class HashView(Frame):
             self.set_selected_member(None)
 
     def _on_refresh(self):
+        """
+        Refresh the data for the key
+        :return:
+        """
         self.master.set_selected_key(self.key)
 
     def _on_add(self):
+        """
+        A callback for when the add button is clicked
+        :return:
+        """
+
         @show_error
         def _on_submit(value):
             self.client.Hashes.hset(self.key, value)
@@ -70,19 +96,28 @@ class HashView(Frame):
         KeyValueInputModal(self, "Add to Hash", _on_submit)
 
     def _on_set(self):
+        """
+        A callback for when the set button is clicked
+        :return:
+        """
         if self.selected_member is None:
             return
         current_value = self.value.get(self.selected_member, None)
+        member = self.selected_member
 
         @show_error
         def _on_submit(value):
-            self.client.Hashes.hset(self.key, (self.selected_member,value))
+            self.client.Hashes.hset(self.key, (member, value))
             self._on_refresh()
 
         SingleStringInputModal(self, "Set", "New Value:", _on_submit, default_value=current_value)
 
     @show_error
     def _on_remove(self):
+        """
+        A callback for when the remove button is clicked
+        :return:
+        """
         if self.selected_member is None:
             return
         answer = tkinter.messagebox.askyesno("Remove",
@@ -96,12 +131,20 @@ class HashView(Frame):
 
     @show_error
     def _on_incr(self):
+        """
+        A callback for when the incr button is clicked
+        :return:
+        """
         if self.selected_member is None:
             return
-        self.client.Hashes.hincr_by(self.key, self.selected_member,1)
+        self.client.Hashes.hincr_by(self.key, self.selected_member, 1)
         self._on_refresh()
 
     def _on_incr_by(self):
+        """
+        A callback for when the incr by button is clicked
+        :return:
+        """
         if self.selected_member is None:
             return
 
@@ -114,6 +157,10 @@ class HashView(Frame):
 
     @show_error
     def _on_pop_min(self):
+        """
+        A callback for when the pop min button is clicked
+        :return:
+        """
         popped = self.client.SortedSets.zpop_min(self.key)
         if popped is None:
             tkinter.messagebox.showinfo("Pop Min", "Set is empty")
@@ -122,6 +169,10 @@ class HashView(Frame):
         self._on_refresh()
 
     def _create_widgets(self):
+        """
+        Create the widgets of the component
+        :return:
+        """
         self._create_data_display()
         self.list_frame = Frame(self, bg=Colors.BACKGROUND.value)
         self.list_frame.pack(fill=Y, expand=True)
@@ -129,6 +180,10 @@ class HashView(Frame):
         self._create_key_list()
 
     def _create_data_display(self):
+        """
+        Create the data display
+        :return:
+        """
         key_frame = Frame(self, bg=Colors.BACKGROUND.value)
         key_label = Label(key_frame, text="Key:", font=(FONT, FontSizes.TITLE.value), bg=Colors.BACKGROUND.value,
                           fg=Colors.TEXT_SECONDARY.value)
@@ -166,6 +221,10 @@ class HashView(Frame):
         key_list_frame.pack(fill=X)
 
     def _create_controls(self):
+        """
+        Create the controls for the list
+        :return:
+        """
         self.controls = Frame(self.list_frame, bg=Colors.PRIMARY.value, padx=5, pady=5)
         controls_label = Label(self.list_frame, text="Controls", font=(FONT, FontSizes.TITLE.value),
                                bg=Colors.PRIMARY.value,
@@ -202,6 +261,10 @@ class HashView(Frame):
         self.controls.rowconfigure(1, weight=1)
 
     def _create_key_list(self):
+        """
+        Create the list of members
+        :return:
+        """
         self.key_list = Listbox(self.list_frame, selectmode=SINGLE)
         self.key_list.configure(bg=Colors.LIGHT.value,
                                 fg=Colors.TEXT.value,

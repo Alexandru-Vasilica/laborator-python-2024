@@ -4,6 +4,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisMap(RedisType):
+    """
+    Represents a Redis map
+    """
     value: dict
 
     def __init__(self, value: dict):

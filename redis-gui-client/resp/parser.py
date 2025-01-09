@@ -1,5 +1,5 @@
 from socket import socket
-
+import resp.types.redis_type as redis_type
 import resp.types.redis_bulk_string as redis_bulk_string
 import resp.types.redis_error as redis_error
 import resp.types.redis_integer as redis_integer
@@ -13,7 +13,12 @@ import resp.types.redis_set as redis_set
 from resp.resp_exception import RESPException
 
 
-def parse_redis_response(sock: socket):
+def parse_redis_response(sock: socket) -> redis_type.RedisType:
+    """
+    Parse a response from a Redis server
+    :param sock: The socket to read from
+    :return: A representation of the response
+    """
     response_type = sock.recv(1).decode('ascii')
     match response_type:
         case '+':

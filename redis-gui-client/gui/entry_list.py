@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 
 
 class EntryList(tk.Frame):
+    """
+    A list of keys in the Redis database
+    """
     client: Client
     master: MainFrame
 
@@ -23,12 +26,21 @@ class EntryList(tk.Frame):
         self.configure(bg=Colors.BACKGROUND.value)
         self._create_widgets()
 
-    def set_keys(self, keys):
+    def set_keys(self, keys: list):
+        """
+        Set the keys in the list
+        :param keys: The keys to set
+        :return:
+        """
         self.key_list.delete(0, tk.END)
         for key in keys:
             self.key_list.insert(tk.END, key)
 
     def handle_key_selected(self):
+        """
+        Handle the selection of a key
+        :return:
+        """
         if self.state["selected_key"]:
             selected_index = self.key_list.get(0, tk.END).index(self.state["selected_key"])
             self.key_list.selection_set(selected_index)
@@ -37,6 +49,10 @@ class EntryList(tk.Frame):
             self.toolbar.delete_button.configure(state=tk.DISABLED)
 
     def _create_widgets(self):
+        """
+        Create the widgets of the component
+        :return:
+        """
         self._create_filters()
         self._create_toolbar()
         self._create_key_list()
@@ -47,12 +63,21 @@ class EntryList(tk.Frame):
         self.rowconfigure(0, weight=0)
 
     def _on_select_key(self, event):
+        """
+        A callback for when a key is selected
+        :param event:
+        :return:
+        """
         selected_index = self.key_list.curselection()
         if selected_index:
             selected_key = self.key_list.get(selected_index)
             self.master.set_selected_key(selected_key)
 
     def _on_select_type(self):
+        """
+        A callback for when a key type is selected
+        :return:
+        """
         self.master.refresh_keys()
         if self.state["selected_type"].get() == KeyTypes.ALL.value:
             self.toolbar.add_button.configure(state=tk.DISABLED)
@@ -60,6 +85,10 @@ class EntryList(tk.Frame):
             self.toolbar.add_button.configure(state=tk.NORMAL)
 
     def _create_key_list(self):
+        """
+        Create the list of keys
+        :return:
+        """
         self.key_list = tk.Listbox(self, selectmode=tk.SINGLE)
         self.key_list.configure(bg=Colors.LIGHT.value,
                                 fg=Colors.TEXT.value,
@@ -75,6 +104,10 @@ class EntryList(tk.Frame):
         self.key_list.grid(row=2, column=0, sticky="nsew")
 
     def _create_toolbar(self):
+        """
+        Create the toolbar for the list
+        :return:
+        """
         self.toolbar = tk.Frame(self)
         self.toolbar.configure(bg=Colors.BACKGROUND.value, padx=10, pady=5)
 
@@ -96,6 +129,10 @@ class EntryList(tk.Frame):
         self.toolbar.grid(row=1, column=0, sticky="ew")
 
     def _create_filters(self):
+        """
+        Create the filters for the list
+        :return:
+        """
         self.filters = tk.Frame(self)
         self.filters.grid(row=0, column=0, sticky="ew")
         self.filters.configure(bg=Colors.PRIMARY.value, padx=10, pady=5)
@@ -119,7 +156,6 @@ class EntryList(tk.Frame):
         self.filters.type_menu_label = tk.Label(self.filters, text="Key Type:", bg=Colors.PRIMARY.value,
                                                 fg=Colors.TEXT.value,
                                                 font=(FONT, FontSizes.MEDIUM.value))
-
 
         self.filters.key_filter = StringVar()
         self.filters.key_filter_input = tk.Entry(self.filters, textvariable=self.filters.key_filter)

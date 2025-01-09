@@ -9,6 +9,9 @@ from gui.components.button import Button
 
 
 class App:
+    """
+    The main application window
+    """
 
     def __init__(self):
         self.root = tk.Tk()
@@ -20,6 +23,10 @@ class App:
 
     @show_error
     def _on_connect(self):
+        """
+        Connect to the Redis server and initialize the main frame
+        :return:
+        """
         host = self.host_entry.get()
         port = self.port_entry.get()
         try:
@@ -33,6 +40,10 @@ class App:
         self.frame.pack(fill=tk.BOTH, expand=True)
 
     def _create_connection_form(self):
+        """
+        Create the connection form
+        :return:
+        """
         self.frame = Frame(self.root)
         self.frame.pack(fill=tk.BOTH, expand=True)
         self.frame.configure(bg=Colors.BACKGROUND.value)
@@ -67,4 +78,8 @@ class App:
         self.frame.rowconfigure(3, weight=1)
 
     def run(self):
+        """
+        Run the main application loop
+        :return:
+        """
         self.root.mainloop()

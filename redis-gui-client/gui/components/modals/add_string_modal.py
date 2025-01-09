@@ -8,9 +8,13 @@ from gui.components.button import Button
 
 
 class AddStringModal(FormModal):
-    client: Client
+    """
+    A modal for adding a string
+    """
+    create_key: callable
+    error: Label | None
 
-    def __init__(self, master, create_key):
+    def __init__(self, master, create_key: callable):
         super().__init__(master, "300x200", "Add String", self._validate_form, self.add_key)
         self.create_key = create_key
         self.error = None
@@ -51,6 +55,11 @@ class AddStringModal(FormModal):
         return True
 
     def _show_error(self, error_message):
+        """
+        Show an error message
+        :param error_message:  The error message to show
+        :return:
+        """
         if self.error is not None:
             self.error.destroy()
         self.error = Label(self, text=error_message)
@@ -58,6 +67,10 @@ class AddStringModal(FormModal):
         self.error.pack(side=TOP)
 
     def add_key(self):
+        """
+        Add the key
+        :return:
+        """
         if not self._validate_form():
             return
         key = self.form.key_entry.get()

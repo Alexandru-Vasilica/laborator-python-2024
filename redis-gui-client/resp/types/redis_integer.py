@@ -3,6 +3,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisInteger(RedisType):
+    """
+    Represents a Redis integer
+    """
     value: int
 
     def __init__(self, value: int):

@@ -4,6 +4,9 @@ from resp.utils import read_until_delimiter
 
 
 class RedisArray(RedisType):
+    """
+    Represents a Redis array
+    """
     value: list
 
     def __init__(self, value: list):
